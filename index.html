@@ -1,132 +1,89 @@
-<!DOCTYPE html><html lang="ar">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduAR - بطاقات الواقع المعزز</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>AR Card Creator</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <style>
     body {
-      background-color: #f8f9fa;
-      direction: rtl;
+      background: #f7f7f7;
     }
-    header {
-      background-color: #007bff;
-      color: white;
-      padding: 1rem;
+    .card {
+      border-radius: 20px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .footer {
       text-align: center;
-      margin-bottom: 1rem;
-    }
-    #mainImage {
-      max-width: 100%;
-      height: auto;
-      margin-bottom: 1rem;
-      border-radius: 10px;
-    }
-    .section {
-      display: none;
-      margin-top: 1rem;
-    }
-    .card-model {
-      margin-bottom: 1rem;
+      padding: 20px;
+      font-size: 0.9rem;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>EduAR – بطاقات الواقع المعزز</h1>
-  </header>  <div class="container text-center">
-    <img src="assets/ar.jpg" id="mainImage" alt="AR Illustration"><div class="mb-3">
-  <button class="btn btn-primary" onclick="showSection('createSection')">➕ إنشاء بطاقة</button>
-  <button class="btn btn-success" onclick="showSection('viewSection')">📚 استخدام البطاقات</button>
-  <button class="btn btn-warning" onclick="window.location.href='camera.html'">📷 عرض بالكاميرا</button>
+  <div class="container py-5">
+    <h1 class="text-center mb-4">🃏 Create Your AR Card</h1><div class="card p-4">
+  <form id="cardForm">
+    <div class="mb-3">
+      <label for="markerInput" class="form-label">1️⃣ Upload Marker Image (JPG/PNG)</label>
+      <input class="form-control" type="file" id="markerInput" accept="image/*" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="modelInput" class="form-label">2️⃣ Upload 3D Model (.glb)</label>
+      <input class="form-control" type="file" id="modelInput" accept=".glb" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="audioInput" class="form-label">3️⃣ Upload Audio File (MP3)</label>
+      <input class="form-control" type="file" id="audioInput" accept="audio/*" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">✅ Create AR Card</button>
+  </form>
+
+  <hr>
+
+  <a href="camera.html" class="btn btn-success w-100 mt-2">🎥 Launch AR Camera</a>
 </div>
 
-<!-- قسم إنشاء بطاقة -->
-<div id="createSection" class="section">
-  <div class="card p-3">
-    <input type="text" id="desc" class="form-control mb-2" placeholder="الوصف">
-    <input type="file" id="model" class="form-control mb-2" accept=".glb,.gltf">
-    <input type="file" id="sound" class="form-control mb-2" accept="audio/*">
-    <input type="file" id="marker" class="form-control mb-2" accept="image/*">
-    <button class="btn btn-primary" onclick="saveCard()">حفظ البطاقة</button>
-  </div>
-</div>
-
-<!-- قسم عرض البطاقات -->
-<div id="viewSection" class="section">
-  <div id="cardsContainer" class="row"></div>
-</div>
-
+  </div>  <div class="footer">
+    &copy; Abdullah 2025
   </div>  <script>
-    function showSection(id) {
-      document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
-    }
+    document.getElementById('cardForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
 
-    function saveCard() {
-      const desc = document.getElementById('desc').value;
-      const modelFile = document.getElementById('model').files[0];
-      const soundFile = document.getElementById('sound').files[0];
-      const markerFile = document.getElementById('marker').files[0];
+      const markerFile = document.getElementById('markerInput').files[0];
+      const modelFile = document.getElementById('modelInput').files[0];
+      const audioFile = document.getElementById('audioInput').files[0];
 
-      if (!desc || !modelFile || !soundFile || !markerFile) {
-        alert("يرجى إدخال جميع البيانات.");
+      if (!markerFile || !modelFile || !audioFile) {
+        alert("Please select all files.");
         return;
       }
 
-      const readerModel = new FileReader();
-      const readerSound = new FileReader();
-      const readerMarker = new FileReader();
-
-      readerModel.onload = function() {
-        readerSound.onload = function() {
-          readerMarker.onload = function() {
-            const cards = JSON.parse(localStorage.getItem('edu_cards') || '[]');
-            cards.push({
-              desc,
-              model: readerModel.result,
-              sound: readerSound.result,
-              marker: readerMarker.result
-            });
-            localStorage.setItem('edu_cards', JSON.stringify(cards));
-            alert("تم حفظ البطاقة.");
-          };
-          readerMarker.readAsDataURL(markerFile);
-        };
-        readerSound.readAsDataURL(soundFile);
-      };
-      readerModel.readAsDataURL(modelFile);
-    }
-
-    function loadCards() {
-      const cards = JSON.parse(localStorage.getItem('edu_cards') || '[]');
-      const container = document.getElementById('cardsContainer');
-      container.innerHTML = '';
-      cards.forEach((card, index) => {
-        const col = document.createElement('div');
-        col.className = 'col-md-4';
-        col.innerHTML = `
-          <div class="card card-model">
-            <img src="${card.marker}" class="card-img-top">
-            <div class="card-body">
-              <p class="card-text">${card.desc}</p>
-              <audio controls src="${card.sound}"></audio>
-              <model-viewer src="${card.model}" ar auto-rotate camera-controls style="width: 100%; height: 300px;"></model-viewer>
-              <button class="btn btn-danger btn-sm mt-2" onclick="deleteCard(${index})">🗑 حذف</button>
-            </div>
-          </div>
-        `;
-        container.appendChild(col);
+      const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
       });
-    }
 
-    function deleteCard(index) {
-      const cards = JSON.parse(localStorage.getItem('edu_cards') || '[]');
-      cards.splice(index, 1);
-      localStorage.setItem('edu_cards', JSON.stringify(cards));
-      loadCards();
-    }
+      const markerBase64 = await toBase64(markerFile);
+      const modelBase64 = await toBase64(modelFile);
+      const audioBase64 = await toBase64(audioFile);
 
-    document.addEventListener('DOMContentLoaded', loadCards);
-  </script>  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script></body>
+      const cardData = {
+        marker: markerBase64,
+        model: modelBase64,
+        audio: audioBase64,
+        timestamp: Date.now()
+      };
+
+      // Save the new card, overwrite any existing one
+      localStorage.setItem('arCard', JSON.stringify(cardData));
+
+      alert("✅ AR Card created successfully! Click 'Launch AR Camera' to view it.");
+    });
+  </script></body>
 </html>
