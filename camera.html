@@ -1,92 +1,76 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>View AR Card</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <title>عرض البطاقة</title>
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
   <style>
-    body {
-      background: #000;
-      color: #fff;
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .footer {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
       text-align: center;
-    }
-    canvas, video {
-      max-width: 100%;
-      height: auto;
-    }
-    .controls {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 999;
+      font-size: 14px;
+      color: white;
+      background-color: rgba(0,0,0,0.5);
     }
   </style>
 </head>
 <body>
-  <div class="controls">
-    <a href="index.html" class="btn btn-warning">⬅️ Back to Creator</a>
-  </div><video id="video" autoplay muted playsinline></video>
 
-  <div id="ar-container"></div>  <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
-    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js';
+<a-scene mindar-image="imageTargetSrc: ./target.mind; autoStart: true;" 
+         embedded color-space="sRGB" 
+         renderer="precision: mediump; antialias: true" 
+         vr-mode-ui="enabled: false" 
+         device-orientation-permission-ui="enabled: true">
+         
+  <a-assets id="assets"></a-assets>
 
-    const video = document.getElementById('video');
-    const arCard = JSON.parse(localStorage.getItem('arCard'));
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    if (!arCard) {
-      alert("❌ No AR card found. Please create one first.");
-      window.location.href = 'index.html';
-    }
+  <a-entity mindar-image-target="targetIndex: 0" id="markerEntity">
+    <!-- سيتم إدراج المجسم والصوت هنا -->
+  </a-entity>
+</a-scene>
 
-    // 1. فتح الكاميرا
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        console.error("Camera error:", err);
-        alert("📷 Cannot access the camera.");
-      });
+<div class="footer">&copy; Abdullah 2025</div>
 
-    // 2. إنشاء مشهد THREE.js
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('ar-container').appendChild(renderer.domElement);
+<script>
+  const arData = JSON.parse(localStorage.getItem('arCard'));
 
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444);
-    light.position.set(0, 20, 0);
-    scene.add(light);
+  if (!arData) {
+    alert("لم يتم إنشاء بطاقة. عد إلى index.html.");
+    window.location.href = "index.html";
+  }
 
-    const loader = new GLTFLoader();
-    const modelData = atob(arCard.model.split(',')[1]);
-    const modelBlob = new Blob([new Uint8Array([...modelData].map(c => c.charCodeAt(0)))], { type: 'model/gltf-binary' });
-    const modelURL = URL.createObjectURL(modelBlob);
+  const assets = document.getElementById('assets');
+  const markerEntity = document.getElementById('markerEntity');
 
-    loader.load(modelURL, gltf => {
-      const model = gltf.scene;
-      model.scale.set(1, 1, 1);
-      scene.add(model);
-      camera.position.z = 5;
+  // تحميل الصوت
+  const audio = document.createElement('audio');
+  audio.setAttribute('id', 'audio1');
+  audio.setAttribute('src', arData.audioName);
+  assets.appendChild(audio);
 
-      animate();
-    }, undefined, err => {
-      console.error("Model load error:", err);
-    });
+  // تحميل المجسم
+  const model = document.createElement('a-gltf-model');
+  model.setAttribute('src', arData.modelName);
+  model.setAttribute('position', '0 0 0');
+  model.setAttribute('scale', '0.5 0.5 0.5');
+  markerEntity.appendChild(model);
 
-    function animate() {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    }
+  // تشغيل الصوت عند اكتشاف البطاقة
+  markerEntity.addEventListener('targetFound', () => {
+    document.querySelector('#audio1').play();
+  });
+</script>
 
-    // 3. تشغيل الصوت
-    const audio = new Audio(arCard.audio);
-    audio.play();
-  </script>  <div class="footer text-light mt-5">
-    &copy; Abdullah 2025
-  </div>
 </body>
 </html>
