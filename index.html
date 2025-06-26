@@ -1,77 +1,111 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>إنشاء بطاقة AR</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <title>إنشاء بطاقة واقع معزز</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+    rel="stylesheet"
+  >
   <style>
-    body { font-family: 'Tahoma',sans-serif; text-align:center; padding:40px; background:linear-gradient(to bottom,#e8f4f8,#f7fafc); }
-    img.ar-img { max-width:200px; margin:20px 0; border-radius:10px; }
+    body {
+      background: linear-gradient(to bottom right, #f0f8ff, #e0eafc);
+      font-family: 'Tahoma', sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+    .ar-image {
+      max-width: 300px;
+      margin: 20px auto;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    footer {
+      margin-top: 50px;
+      color: #888;
+    }
   </style>
 </head>
 <body>
 
-  <h1 class="text-primary mb-4">إنشاء بطاقة واقع معزز</h1>
-  <img src="ar.jpg" alt="AR" class="ar-img">
+  <div class="container">
+    <h1 class="mb-4 text-primary">إنشاء بطاقة واقع معزز</h1>
 
-  <div class="mb-3">
-    <label>📸 Marker (JPG/PNG):</label>
-    <input type="file" id="marker" accept="image/*" class="form-control">
+    <img src="ar.jpg" alt="AR Example" class="ar-image">
+
+    <div class="mb-3">
+      <label class="form-label">📸 صورة Marker:</label>
+      <input type="file" id="marker" accept=".patt,.jpg,.png" class="form-control">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">📦 مجسم ثلاثي الأبعاد (.glb):</label>
+      <input type="file" id="model" accept=".glb" class="form-control">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">🔊 ملف صوتي (MP3):</label>
+      <input type="file" id="audio" accept=".mp3" class="form-control">
+    </div>
+
+    <button id="save" class="btn btn-success m-2">💾 إنشاء البطاقة</button>
+    <a href="camera.html" class="btn btn-primary m-2">📷 عرض البطاقة بالكاميرا</a>
+    <a href="cards.html" class="btn btn-warning m-2">📂 عرض البطاقة المحفوظة</a>
+    <button id="deleteCard" class="btn btn-danger m-2">🗑️ حذف البطاقة</button>
+
+    <footer>
+      <p>جميع الحقوق محفوظة &copy; Abdullah 2025</p>
+    </footer>
   </div>
-  <div class="mb-3">
-    <label>📦 نموذج ثلاثي (GLB):</label>
-    <input type="file" id="model" accept=".glb" class="form-control">
-  </div>
-  <div class="mb-3">
-    <label>🔊 صوت (اختياري MP3):</label>
-    <input type="file" id="audio" accept="audio/*" class="form-control">
-  </div>
 
-  <button id="save" class="btn btn-success me-2">💾 حفظ البطاقة</button>
-  <a href="camera.html" class="btn btn-primary me-2">📷 فحص البطاقة</a>
-  <button id="delete" class="btn btn-danger">🗑️ حذف البطاقة</button>
+  <script>
+    // حفظ الملفات في localStorage
+    document.getElementById("save").addEventListener("click", () => {
+      const markerFile = document.getElementById("marker").files[0];
+      const modelFile = document.getElementById("model").files[0];
+      const audioFile = document.getElementById("audio").files[0];
 
-  <p class="mt-4 text-muted">&copy; Abdullah 2025</p>
+      if (!markerFile || !modelFile) {
+        alert("يرجى اختيار صورة الماركر والمجسم الثلاثي الأبعاد.");
+        return;
+      }
 
-<script>
-  function readAndSave(id, key, callback) {
-    const f = document.getElementById(id).files[0];
-    const r = new FileReader();
-    r.onload = () => {
-      localStorage.setItem(key, r.result);
-      callback && callback();
-    };
-    r.readAsDataURL(f);
-  }
+      const reader1 = new FileReader();
+      reader1.onload = () => {
+        localStorage.setItem("ar_card_marker", reader1.result);
 
-  document.getElementById('save').onclick = () => {
-    if (!document.getElementById('marker').files[0] ||
-        !document.getElementById('model').files[0]) {
-      return alert('يُرجى اختيار Marker و GLB على الأقل.');
-    }
-    readAndSave('marker', 'ar_marker', () => {
-      readAndSave('model', 'ar_model', () => {
-        const audioInput = document.getElementById('audio').files[0];
-        if (audioInput)
-          readAndSave('audio', 'ar_audio', () => alert('✅ حفظ البطاقة بنجاح!'));
-        else {
-          localStorage.removeItem('ar_audio');
-          alert('✅ حفظ البطاقة بدون صوت.');
-        }
-      });
+        const reader2 = new FileReader();
+        reader2.onload = () => {
+          localStorage.setItem("ar_card_model", reader2.result);
+
+          if (audioFile) {
+            const reader3 = new FileReader();
+            reader3.onload = () => {
+              localStorage.setItem("ar_card_audio", reader3.result);
+              alert("✅ تم إنشاء البطاقة بنجاح!");
+            };
+            reader3.readAsDataURL(audioFile);
+          } else {
+            localStorage.removeItem("ar_card_audio");
+            alert("✅ تم إنشاء البطاقة بدون صوت.");
+          }
+
+        };
+        reader2.readAsDataURL(modelFile);
+      };
+      reader1.readAsDataURL(markerFile);
     });
-  };
 
-  document.getElementById('delete').onclick = () => {
-    if (confirm('هل تريد حذف البطاقة؟')) {
-      localStorage.removeItem('ar_marker');
-      localStorage.removeItem('ar_model');
-      localStorage.removeItem('ar_audio');
-      alert('👍 تم الحذف.');
-    }
-  };
-</script>
-
+    // حذف البطاقة
+    document.getElementById("deleteCard").addEventListener("click", () => {
+      if (confirm("هل أنت متأكد أنك تريد حذف البطاقة؟")) {
+        localStorage.removeItem("ar_card_marker");
+        localStorage.removeItem("ar_card_model");
+        localStorage.removeItem("ar_card_audio");
+        alert("تم حذف البطاقة بنجاح.");
+      }
+    });
+  </script>
 </body>
 </html>
