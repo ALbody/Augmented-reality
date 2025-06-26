@@ -2,73 +2,66 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>عرض البطاقة</title>
-  <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
+  <title>فحص بطاقة AR</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-    }
-    .footer {
-      position: fixed;
-      bottom: 10px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      font-size: 14px;
-      color: white;
-      background-color: rgba(0,0,0,0.5);
-    }
+    body,html { margin:0;padding:0;overflow:hidden;height:100%; }
+    footer { position:fixed;bottom:10px; width:100%; text-align:center;color:white; background:rgba(0,0,0,0.4); }
   </style>
 </head>
 <body>
 
-<a-scene mindar-image="imageTargetSrc: ./target.mind; autoStart: true;" 
-         embedded color-space="sRGB" 
-         renderer="precision: mediump; antialias: true" 
-         vr-mode-ui="enabled: false" 
-         device-orientation-permission-ui="enabled: true">
-         
+<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
   <a-assets id="assets"></a-assets>
 
-  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-  <a-entity mindar-image-target="targetIndex: 0" id="markerEntity">
-    <!-- سيتم إدراج المجسم والصوت هنا -->
-  </a-entity>
+  <a-marker id="m" type="pattern" preset="custom"></a-marker>
+  <a-entity camera></a-entity>
 </a-scene>
 
-<div class="footer">&copy; Abdullah 2025</div>
+<footer>© Abdullah 2025</footer>
 
 <script>
-  const arData = JSON.parse(localStorage.getItem('arCard'));
+  const mk = localStorage.getItem('ar_marker');
+  const md = localStorage.getItem('ar_model');
+  const au = localStorage.getItem('ar_audio');
 
-  if (!arData) {
-    alert("لم يتم إنشاء بطاقة. عد إلى index.html.");
-    window.location.href = "index.html";
+  if (!mk || !md) {
+    alert('لا يوجد بطاقة محفوظة. عد إلى الإنشاء.');
+    return location.href = 'index.html';
   }
 
-  const assets = document.getElementById('assets');
-  const markerEntity = document.getElementById('markerEntity');
+  function d2b(data) {
+    const [h, b64] = data.split(',');
+    const bin = atob(b64), len=bin.length;
+    const u=new Uint8Array(len);
+    for(let i=0;i<len;i++)u[i]=bin.charCodeAt(i);
+    return new Blob([u], {type: h.match(/:(.*?);/)[1]});
+  }
 
-  // تحميل الصوت
-  const audio = document.createElement('audio');
-  audio.setAttribute('id', 'audio1');
-  audio.setAttribute('src', arData.audioName);
-  assets.appendChild(audio);
+  // Marker
+  const mBlob = d2b(mk);
+  const mURL = URL.createObjectURL(mBlob);
+  document.getElementById('m').setAttribute('url', mURL);
 
-  // تحميل المجسم
-  const model = document.createElement('a-gltf-model');
-  model.setAttribute('src', arData.modelName);
-  model.setAttribute('position', '0 0 0');
-  model.setAttribute('scale', '0.5 0.5 0.5');
-  markerEntity.appendChild(model);
+  // Model
+  const mdBlob = d2b(md);
+  const mdURL = URL.createObjectURL(mdBlob);
+  const modelEntity = document.createElement('a-entity');
+  modelEntity.setAttribute('gltf-model', mdURL);
+  modelEntity.setAttribute('scale', '0.5 0.5 0.5');
+  modelEntity.setAttribute('position', '0 0 0');
+  document.getElementById('m').appendChild(modelEntity);
 
-  // تشغيل الصوت عند اكتشاف البطاقة
-  markerEntity.addEventListener('targetFound', () => {
-    document.querySelector('#audio1').play();
+  // Audio
+  let audio;
+  if (au) {
+    const auBlob = d2b(au);
+    audio = new Audio(URL.createObjectURL(auBlob));
+  }
+
+  document.getElementById('m').addEventListener('markerFound', () => {
+    if (audio) audio.play();
   });
 </script>
 
