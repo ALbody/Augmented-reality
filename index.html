@@ -1,155 +1,118 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>EduAR – بطاقات الواقع المعزز</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Bootstrap 5 CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduAR - بطاقات الواقع المعزز</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(to right, #e0f7fa, #fff3e0);
-      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+      direction: rtl;
     }
-
     header {
-      background-color: #6c5ce7;
+      background-color: #007bff;
       color: white;
-      padding: 20px;
+      padding: 1rem;
       text-align: center;
-      font-size: 2rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      margin-bottom: 1rem;
     }
-
-    .ar-image {
+    #mainImage {
       max-width: 100%;
-      border-radius: 20px;
-      margin-bottom: 30px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      height: auto;
+      margin-bottom: 1rem;
+      border-radius: 10px;
     }
-
-    .card img {
-      max-height: 200px;
-      object-fit: cover;
+    .section {
+      display: none;
+      margin-top: 1rem;
     }
-
-    .no-data {
-      text-align: center;
-      color: #888;
-      font-size: 1.2rem;
+    .card-model {
+      margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
+  <header>
+    <h1>EduAR – بطاقات الواقع المعزز</h1>
+  </header>  <div class="container text-center">
+    <img src="assets/ar.jpg" id="mainImage" alt="AR Illustration"><div class="mb-3">
+  <button class="btn btn-primary" onclick="showSection('createSection')">➕ إنشاء بطاقة</button>
+  <button class="btn btn-success" onclick="showSection('viewSection')">📚 استخدام البطاقات</button>
+  <button class="btn btn-warning" onclick="window.location.href='camera.html'">📷 عرض بالكاميرا</button>
+</div>
 
-  <!-- Header -->
-  <header>EduAR – بطاقات الواقع المعزز</header>
-
-  <!-- صورة الواقع المعزز -->
-  <div class="container mt-4 text-center">
-    <img src="ar.jpg" alt="AR Example" class="ar-image">
+<!-- قسم إنشاء بطاقة -->
+<div id="createSection" class="section">
+  <div class="card p-3">
+    <input type="text" id="desc" class="form-control mb-2" placeholder="الوصف">
+    <input type="file" id="model" class="form-control mb-2" accept=".glb,.gltf">
+    <input type="file" id="sound" class="form-control mb-2" accept="audio/*">
+    <input type="file" id="marker" class="form-control mb-2" accept="image/*">
+    <button class="btn btn-primary" onclick="saveCard()">حفظ البطاقة</button>
   </div>
+</div>
 
-  <!-- الأزرار -->
-  <div class="container text-center my-4">
-    <button class="btn btn-success me-2" onclick="showSection('create')">➕ إنشاء بطاقة</button>
-    <button class="btn btn-primary" onclick="showSection('use')">📚 استخدام البطاقات</button>
-  </div>
+<!-- قسم عرض البطاقات -->
+<div id="viewSection" class="section">
+  <div id="cardsContainer" class="row"></div>
+</div>
 
-  <!-- إنشاء بطاقة -->
-  <div class="container mb-5" id="create">
-    <div class="card p-4 shadow">
-      <h3 class="mb-3 text-center">✍️ إنشاء بطاقة جديدة</h3>
-      <form id="cardForm">
-        <div class="mb-3">
-          <label class="form-label">📷 صورة البطاقة:</label>
-          <input type="file" class="form-control" id="imageInput" accept="image/*" required>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">📝 الشرح:</label>
-          <textarea class="form-control" id="descriptionInput" rows="3" required></textarea>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">🔊 ملف صوتي (اختياري):</label>
-          <input type="file" class="form-control" id="audioInput" accept="audio/*">
-        </div>
-
-        <div class="text-center">
-          <button type="submit" class="btn btn-success">💾 حفظ البطاقة</button>
-          <p id="successMsg" class="mt-3 text-success"></p>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- عرض البطاقات -->
-  <div class="container mb-5" id="use" style="display: none;">
-    <h3 class="text-center mb-4">📚 البطاقات المحفوظة</h3>
-    <div id="cardsContainer" class="row g-3"></div>
-  </div>
-
-  <!-- JavaScript -->
-  <script>
+  </div>  <script>
     function showSection(id) {
-      document.getElementById('create').style.display = 'none';
-      document.getElementById('use').style.display = 'none';
+      document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
       document.getElementById(id).style.display = 'block';
-
-      if (id === 'use') loadCards();
     }
 
-    document.getElementById('cardForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+    function saveCard() {
+      const desc = document.getElementById('desc').value;
+      const modelFile = document.getElementById('model').files[0];
+      const soundFile = document.getElementById('sound').files[0];
+      const markerFile = document.getElementById('marker').files[0];
 
-      const img = document.getElementById('imageInput').files[0];
-      const desc = document.getElementById('descriptionInput').value;
-      const audio = document.getElementById('audioInput').files[0];
-
-      if (!img || !desc) {
-        alert("يرجى إدخال صورة وشرح");
+      if (!desc || !modelFile || !soundFile || !markerFile) {
+        alert("يرجى إدخال جميع البيانات.");
         return;
       }
 
-      const imageBase64 = await toBase64(img);
-      let audioBase64 = null;
-      if (audio) audioBase64 = await toBase64(audio);
+      const readerModel = new FileReader();
+      const readerSound = new FileReader();
+      const readerMarker = new FileReader();
 
-      const card = {
-        image: imageBase64,
-        description: desc,
-        audio: audioBase64
+      readerModel.onload = function() {
+        readerSound.onload = function() {
+          readerMarker.onload = function() {
+            const cards = JSON.parse(localStorage.getItem('edu_cards') || '[]');
+            cards.push({
+              desc,
+              model: readerModel.result,
+              sound: readerSound.result,
+              marker: readerMarker.result
+            });
+            localStorage.setItem('edu_cards', JSON.stringify(cards));
+            alert("تم حفظ البطاقة.");
+          };
+          readerMarker.readAsDataURL(markerFile);
+        };
+        readerSound.readAsDataURL(soundFile);
       };
-
-      const cards = JSON.parse(localStorage.getItem('eduCards') || '[]');
-      cards.push(card);
-      localStorage.setItem('eduCards', JSON.stringify(cards));
-
-      document.getElementById('successMsg').textContent = "✅ تم حفظ البطاقة!";
-      e.target.reset();
-    });
+      readerModel.readAsDataURL(modelFile);
+    }
 
     function loadCards() {
+      const cards = JSON.parse(localStorage.getItem('edu_cards') || '[]');
       const container = document.getElementById('cardsContainer');
-      const cards = JSON.parse(localStorage.getItem('eduCards') || '[]');
       container.innerHTML = '';
-
-      if (cards.length === 0) {
-        container.innerHTML = '<p class="no-data">لا توجد بطاقات بعد.</p>';
-        return;
-      }
-
-      cards.forEach(card => {
+      cards.forEach((card, index) => {
         const col = document.createElement('div');
-        col.className = 'col-md-6 col-lg-4';
+        col.className = 'col-md-4';
         col.innerHTML = `
-          <div class="card h-100 shadow">
-            <img src="${card.image}" class="card-img-top" alt="بطاقة">
+          <div class="card card-model">
+            <img src="${card.marker}" class="card-img-top">
             <div class="card-body">
-              <p class="card-text">${card.description}</p>
-              ${card.audio ? `<button class="btn btn-sm btn-secondary" onclick="new Audio('${card.audio}').play()">🔊 تشغيل الصوت</button>` : ''}
+              <p class="card-text">${card.desc}</p>
+              <audio controls src="${card.sound}"></audio>
+              <model-viewer src="${card.model}" ar auto-rotate camera-controls style="width: 100%; height: 300px;"></model-viewer>
+              <button class="btn btn-danger btn-sm mt-2" onclick="deleteCard(${index})">🗑 حذف</button>
             </div>
           </div>
         `;
@@ -157,18 +120,13 @@
       });
     }
 
-    function toBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = err => reject(err);
-        reader.readAsDataURL(file);
-      });
+    function deleteCard(index) {
+      const cards = JSON.parse(localStorage.getItem('edu_cards') || '[]');
+      cards.splice(index, 1);
+      localStorage.setItem('edu_cards', JSON.stringify(cards));
+      loadCards();
     }
 
-    // افتراضيًا نعرض قسم الإنشاء
-    showSection('create');
-  </script>
-
-</body>
+    document.addEventListener('DOMContentLoaded', loadCards);
+  </script>  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script></body>
 </html>
